@@ -13,7 +13,7 @@ monetary losses. You should not make decisions based solely on basic strategies 
 ---
 ### Install
 ```angular2html
-pip install stratsim
+pip install timewalk
 ```
 ## Main components
 
@@ -24,7 +24,10 @@ pip install stratsim
 ## Usage
 Create the backtester and run a strategy:
 ```angular2html
-bt = st.BackTester()
+import timewalk as tw
+from timewalk.strategy_classes import *
+
+bt = tw.BackTester()
 results = (bt.load_data("TSLA", "1d")
  .run(RsiStrategy(rsi_window=20)))
 ```
