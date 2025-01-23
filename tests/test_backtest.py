@@ -1,8 +1,8 @@
-import stratsim.yf_helper as yf_helper
+import timewalk.yf_helper as yf_helper
 import pytest
 import pandas as pd
 import numpy as np
-import stratsim.feature_builder as fb
+import timewalk.feature_builder as fb
 
 @pytest.fixture
 def get_1d_sample_data() -> pd.DataFrame:

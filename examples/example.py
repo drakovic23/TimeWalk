@@ -1,7 +1,7 @@
-import stratsim as st
-from stratsim.strategy_classes import *
+import timewalk as tw
+from timewalk.strategy_classes import *
 
-bt = st.BackTester()
+bt = tw.BackTester()
 
 results = (bt.load_data("TSLA", "1d")
  .run(RsiStrategy(rsi_window=20)))
