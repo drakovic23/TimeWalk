@@ -88,7 +88,7 @@ def calc_sma(ticker_data: pd.DataFrame, window: int) -> None:
     ticker_data['SMA'] = ticker_data['Close'].rolling(window=window).sum() / window
 
 
-# Adds
+# Adds macd and macd signal columns to the passed dataframe
 def calc_macd(ticker_data: pd.DataFrame, ema_fast: int, ema_slow: int) -> None:
     calc_ema(ticker_data, window=ema_fast, smoothing=2)
     calc_ema(ticker_data, window=ema_slow, smoothing=2)
