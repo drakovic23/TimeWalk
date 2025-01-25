@@ -39,6 +39,7 @@ class BackTester:
         position_type = 0  # -1 for short/sell, 0 for flat, 1 for buy
         entry_price = 0.0
         commission = account.commission
+        max_drawdown = 0.0
 
         df = pd.DataFrame(index=features.index.copy())
         df['Signal'] = None
@@ -51,6 +52,7 @@ class BackTester:
         df['ClosingPrice'] = features['Close']
         df['Commission'] = 0.0
         df['TotalCommission'] = 0.0
+        df['MaxDrawdown'] = 0.0
 
         # Used if ATR is passed to see if we are stopped out
         def check_stop_loss(current_price: float, current_atr: float) -> bool:
@@ -81,6 +83,8 @@ class BackTester:
                         df.at[features_data.index[i], 'Position'] = 0
                         df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                         df.at[features_data.index[i], 'EntryPrice'] = 0.0
+                        if realized_pnl < 0:
+                            max_drawdown = min(max_drawdown, realized_pnl)
                     elif position_type == -1:
                         # Close short position at stop
                         realized_pnl = ((entry_price - current_price) * position_size)
@@ -90,6 +94,7 @@ class BackTester:
                         df.at[features_data.index[i], 'Position'] = 0
                         df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                         df.at[features_data.index[i], 'EntryPrice'] = 0.0
+                        max_drawdown = min(max_drawdown, realized_pnl)
 
             strategy.on_bar(row)
             if strategy.should_buy(row):
@@ -117,6 +122,7 @@ class BackTester:
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
                     df.at[features_data.index[i], 'Commission'] = commission
+                    max_drawdown = min(max_drawdown, realized_pnl)
 
             if strategy.should_sell(row):
                 if position_type == 0:
@@ -143,6 +149,7 @@ class BackTester:
                     df.at[features_data.index[i], 'RealizedPnL'] = realized_pnl
                     df.at[features_data.index[i], 'EntryPrice'] = 0.0
                     df.at[features_data.index[i], 'Commission'] = commission
+                    max_drawdown = min(max_drawdown, realized_pnl)
 
             # Calculate unrealized PnL for current position
             current_price = features_data['Close'].iloc[i]
@@ -157,6 +164,7 @@ class BackTester:
             df.at[features_data.index[i], 'TotalRealPnL'] = df.at[features_data.index[i], 'RealizedPnL']
             df.at[features_data.index[i], 'CurrentCapital'] = current_capital + unrealized_pnl
             df.at[features_data.index[i], 'TotalCommission'] = df.at[features_data.index[i], 'Commission']
+            df.at[features_data.index[i], 'MaxDrawdown'] = max_drawdown
             if i > 0:
                 # Add the previous TotalPnL to current TotalPnL so we have a rolling total
                 df.at[features_data.index[i], 'TotalRealPnL'] += df.at[features_data.index[i - 1], 'TotalRealPnL']
@@ -179,6 +187,7 @@ class BackTester:
         df.at[last_index, 'TotalRealPnL'] = df['TotalRealPnL'].iloc[-2]  # carry forward the previous total real PnL
         df.at[last_index, 'CurrentCapital'] = current_capital + unrealized_pnl
         df.at[last_index, 'TotalCommission'] = df['TotalCommission'].iloc[-2]
+        df.at[last_index, 'MaxDrawdown'] = df['MaxDrawdown'].iloc[-2]
         return df
 
     def load_data(self, symbol: str, interval: str) -> "BackTester":
